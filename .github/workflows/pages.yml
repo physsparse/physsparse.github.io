@@ -1,0 +1,53 @@
+name: Deploy project site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the verified public project package
+        uses: actions/checkout@v6
+        with:
+          repository: cpeterz/physsparse
+          ref: f1902c118e665fab82fba83b95dca527733bde39
+          path: project-assets
+          persist-credentials: false
+
+      - name: Extract the static site
+        shell: bash
+        run: |
+          unzip -q "project-assets/PhysSparse-Static-Site.zip" -d dist
+          test -s dist/index.html
+          test -s dist/index.css
+          test -s dist/index.js
+          test -s dist/media/preview.mp4
+
+      - name: Upload the static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
