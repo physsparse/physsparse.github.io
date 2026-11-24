@@ -24,10 +24,20 @@ jobs:
           path: project-assets
           persist-credentials: false
 
+      - name: Check out current site updates
+        uses: actions/checkout@v6
+        with:
+          path: site-updates
+          persist-credentials: false
+
       - name: Extract the static site
         shell: bash
         run: |
           unzip -q "project-assets/PhysSparse-Static-Site.zip" -d dist
+          unzip -oq site-updates/site-update.zip -d dist
+          if test -d site-updates/site-verification; then
+            cp -a site-updates/site-verification/. dist/
+          fi
           test -s dist/index.html
           test -s dist/index.css
           test -s dist/index.js
